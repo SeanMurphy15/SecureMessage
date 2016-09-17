@@ -10,11 +10,19 @@ import UIKit
 import Messages
 
 class MessagesViewController: MSMessagesAppViewController {
+
+	var currentConversation : MSConversation?
+
+	var count : Int?
     
+	@IBOutlet weak var messageTextView: UITextView!
+	@IBOutlet weak var createButton: UIButton!
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-    }
+
+
+
+	}
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -24,17 +32,28 @@ class MessagesViewController: MSMessagesAppViewController {
     // MARK: - Conversation Handling
     
     override func willBecomeActive(with conversation: MSConversation) {
-        // Called when the extension is about to move from the inactive to active state.
-        // This will happen when the extension is about to present UI.
-        
-        // Use this method to configure the extension and restore previously stored state.
-    }
-    
+
+			currentConversation = conversation
+	}
+
+	override func willSelect(_ message: MSMessage, conversation: MSConversation) {
+
+	}
+	override func didSelect(_ message: MSMessage, conversation: MSConversation) {
+
+		if let secretMessage = message.url?.path {
+
+			messageTextView.text = secretMessage
+			print("THIS SHOULD BE THE SECRET MESSAGE \(secretMessage)")
+		}
+
+		
+	}
+
     override func didResignActive(with conversation: MSConversation) {
         // Called when the extension is about to move from the active to inactive state.
         // This will happen when the user dissmises the extension, changes to a different
         // conversation or quits Messages.
-        
         // Use this method to release shared resources, save user data, invalidate timers,
         // and store enough state information to restore your extension to its current state
         // in case it is terminated later.
@@ -59,14 +78,30 @@ class MessagesViewController: MSMessagesAppViewController {
     
     override func willTransition(to presentationStyle: MSMessagesAppPresentationStyle) {
         // Called before the extension transitions to a new presentation style.
-    
+		
         // Use this method to prepare for the change in presentation style.
     }
+
     
     override func didTransition(to presentationStyle: MSMessagesAppPresentationStyle) {
-        // Called after the extension transitions to a new presentation style.
-    
-        // Use this method to finalize any behaviors associated with the change in presentation style.
+			switch presentationStyle {
+			case .expanded:
+				messageTextView.isSelectable = true
+			case .compact:
+				messageTextView.isSelectable = false
+			}
     }
+
+	@IBAction func createButtonPressed(_ sender: AnyObject) {
+
+		let message = MSMessage()
+		let layout = MSMessageTemplateLayout()
+		layout.caption = "Secure Message"
+		message.layout = layout
+		message.url = URL(string: messageTextView.text)
+		print("ORIGINAL MESSAGE \(message.url)")
+		currentConversation?.insert(message, completionHandler: nil)
+		self.dismiss()
+	}
 
 }
